@@ -1,6 +1,6 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { emailAndPassword } from "../zod/auth";
+import { emailAndPasswordSchema } from "../zod/auth";
 import { db } from "../database/db";
 import { userTable } from "../database/schemas/user";
 import { eq } from "drizzle-orm";
@@ -20,7 +20,13 @@ export function setupPassport() {
         console.log("inside passport authenticate");
         const email: string = req.body.email;
         const password: string = req.body.password;
-        const parsed = emailAndPassword.safeParse({ email, password });
+        const fullName: string = req.body.fullName;
+
+        const parsed = emailAndPasswordSchema.safeParse({
+          email,
+          password,
+          fullName,
+        });
 
         if (!parsed.success) {
           return done(null, false, { message: parsed.error.errors[0].message });
@@ -44,6 +50,7 @@ export function setupPassport() {
           .values({
             email,
             hashedPassword: hashedPassword,
+            fullName,
           })
           .returning();
 
@@ -60,7 +67,7 @@ export function setupPassport() {
         passwordField: "password",
       },
       async (email, password, done) => {
-        const parsed = emailAndPassword.safeParse({ email, password });
+        const parsed = emailAndPasswordSchema.safeParse({ email, password });
 
         if (!parsed.success) {
           return done(null, false, { message: parsed.error.errors[0].message });
