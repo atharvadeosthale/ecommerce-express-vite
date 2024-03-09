@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import { emailAndPassword } from "../zod/auth";
+import { emailAndPasswordSchema } from "../zod/auth";
 import { User } from "../database/schemas/user";
 import passport from "passport";
 import jwt from "jsonwebtoken";
@@ -11,7 +11,7 @@ export const signup = async (
 ) => {
   const { email, password }: { email: string; password: string } = req.body;
 
-  const parsed = emailAndPassword.safeParse({ email, password });
+  const parsed = emailAndPasswordSchema.safeParse({ email, password });
 
   if (!parsed.success) {
     return res.status(400).json({ errors: parsed.error.errors });

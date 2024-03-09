@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const emailAndPassword = z.object({
+export const emailAndPasswordSchema = z.object({
   email: z
     .string({ invalid_type_error: "Email must be a string" })
     .email("Invalid email")
