@@ -1,8 +1,8 @@
 import { Router } from "express";
-import { createProduct } from "../functions/createProduct";
+import { createProduct } from "../functions/product";
 import { authenticatedUser } from "../middlewares/auth";
-import { getProducts } from "../functions/getProducts";
-import { updateProduct } from "../functions/updateProduct";
+import { getProducts } from "../functions/product";
+import { updateProduct } from "../functions/product";
 
 const router = Router();
 
