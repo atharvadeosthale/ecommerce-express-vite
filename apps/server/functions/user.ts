@@ -10,6 +10,8 @@ import {
   productIdSchema,
 } from "../zod/user";
 import { cartTable } from "../database/schemas/cart";
+import { cartItemTable } from "../database/schemas/cartItem";
+import { productTable } from "../database/schemas/product";
 
 export const getUser = (req: Request, res: Response) => {
   if (!req.user) return;
@@ -80,14 +82,27 @@ export const deleteAddress = async (req: Request, res: Response) => {
 export const getCart = async (req: Request, res: Response) => {
   if (!req.user) return;
 
-  const response = await db
+  const cartResponse = await db
     .select()
     .from(cartTable)
-    .where(eq(cartTable.userId, req.user.id));
+    .where(and(eq(cartTable.userId, req.user.id), eq(cartTable.active, true)));
+
+  if (cartResponse.length === 0) {
+    await db.insert(cartTable).values({
+      userId: req.user.id,
+      active: true,
+    });
+  }
+
+  const cartItemsResponse = await db
+    .select()
+    .from(cartItemTable)
+    .where(eq(cartItemTable.id, cartResponse[0].id))
+    .leftJoin(productTable, eq(cartItemTable.productId, productTable.id));
 
   return res.json({
     message: "Cart fetched successfully",
-    cart: response,
+    cart: cartItemsResponse,
   });
 };
 
@@ -102,20 +117,33 @@ export const addToCart = async (req: Request, res: Response) => {
     return res.status(400).json({ error: parsed.error.errors });
   }
 
-  await db.insert(cartTable).values({
+  const cartResponse = await db
+    .select()
+    .from(cartTable)
+    .where(and(eq(cartTable.userId, req.user.id), eq(cartTable.active, true)));
+
+  if (cartResponse.length === 0) {
+    await db.insert(cartTable).values({
+      userId: req.user.id,
+      active: true,
+    });
+  }
+
+  await db.insert(cartItemTable).values({
     productId,
-    userId: req.user.id,
+    cartId: cartResponse[0].id,
     quantity,
   });
 
-  const getCartResponse = await db
+  const cartItemsResponse = await db
     .select()
-    .from(cartTable)
-    .where(eq(cartTable.userId, req.user.id));
+    .from(cartItemTable)
+    .where(eq(cartItemTable.id, cartResponse[0].id))
+    .leftJoin(productTable, eq(cartItemTable.productId, productTable.id));
 
   return res.json({
     message: "Product added to cart successfully",
-    cart: getCartResponse,
+    cart: cartItemsResponse,
   });
 };
 
@@ -129,16 +157,31 @@ export const removeFromCart = async (req: Request, res: Response) => {
   if (!parsed.success)
     return res.status(400).json({ error: parsed.error.errors });
 
+  const cartResponse = await db
+    .select()
+    .from(cartTable)
+    .where(and(eq(cartTable.userId, req.user.id), eq(cartTable.active, true)));
+
+  if (cartResponse.length === 0) {
+    await db.insert(cartTable).values({
+      userId: req.user.id,
+      active: true,
+    });
+  }
+
   await db
-    .delete(cartTable)
+    .delete(cartItemTable)
     .where(
-      and(eq(cartTable.userId, req.user.id), eq(cartTable.productId, productId))
+      and(
+        eq(cartItemTable.cartId, cartResponse[0].id),
+        eq(cartItemTable.productId, productId)
+      )
     );
 
   const getCartResponse = await db
     .select()
-    .from(cartTable)
-    .where(eq(cartTable.userId, req.user.id));
+    .from(cartItemTable)
+    .where(eq(cartItemTable.cartId, cartResponse[0].id));
 
   return res.json({
     message: "Product removed from cart successfully",
