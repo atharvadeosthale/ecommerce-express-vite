@@ -32,7 +32,6 @@ export function setupPassport() {
           return done(null, false, { message: parsed.error.errors[0].message });
         }
 
-        console.log("before fetching");
         const result = await db
           .select()
           .from(userTable)
@@ -41,7 +40,6 @@ export function setupPassport() {
         if (result.length > 0) {
           return done(null, false, { message: "Email already exists" });
         }
-        console.log("after fetching");
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
