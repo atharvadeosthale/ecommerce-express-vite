@@ -3,6 +3,7 @@ import express from "express";
 import auth from "./routes/auth";
 import product from "./routes/product";
 import user from "./routes/user";
+import payments from "./routes/payments";
 import { User as AuthUser } from "./database/schemas/user";
 import cors from "cors";
 import { connectToDb } from "./database/db";
@@ -20,6 +21,7 @@ app.use(cors());
 app.use("/auth", auth);
 app.use("/product", product);
 app.use("/user", user);
+app.use("/payments", payments);
 
 app.get("/", (req, res) => {
   res.json({ message: "It works" });
