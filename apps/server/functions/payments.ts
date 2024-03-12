@@ -10,14 +10,34 @@ export async function createAccount(req: Request, res: Response) {
   const { stripeAccountId, id, fullName, email } = req.user;
 
   if (stripeAccountId !== "") {
+    const account = await stripe.accounts.retrieve(stripeAccountId);
+    if (!account.details_submitted) {
+      const accountLink = await stripe.accountLinks.create({
+        account: stripeAccountId,
+        type: "account_onboarding",
+        return_url: process.env.CLIENT_BASE_URL as string,
+        refresh_url: process.env.CLIENT_BASE_URL as string,
+      });
+
+      return res.json({
+        message: "Account created successfully",
+        onboardingLink: accountLink.url,
+      });
+    }
     return res.status(400).json({ error: "Account already created" });
   }
 
   const account = await stripe.accounts.create({
+    type: "custom",
+    country: "IN",
     email,
     business_type: "individual",
     individual: {
       full_name_aliases: [fullName],
+    },
+    capabilities: {
+      card_payments: { requested: true },
+      transfers: { requested: true },
     },
   });
 
@@ -29,6 +49,8 @@ export async function createAccount(req: Request, res: Response) {
   const accountLink = await stripe.accountLinks.create({
     account: account.id,
     type: "account_onboarding",
+    return_url: process.env.CLIENT_BASE_URL as string,
+    refresh_url: process.env.CLIENT_BASE_URL as string,
   });
 
   return res.json({

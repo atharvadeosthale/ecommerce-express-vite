@@ -10,7 +10,7 @@ import { checkPaymentsReady } from "../middlewares/payments";
 const router = Router();
 
 router.post("/createAccount", authenticatedUser, createAccount);
-router.post(
+router.get(
   "/checkAccount",
   authenticatedUser,
   checkPaymentsReady,
