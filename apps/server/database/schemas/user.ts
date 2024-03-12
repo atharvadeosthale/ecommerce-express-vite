@@ -5,6 +5,7 @@ export const userTable = pgTable("user", {
   email: text("email").notNull().unique(),
   hashedPassword: text("hashed_password").notNull(),
   fullName: text("full_name").notNull(),
+  stripeAccountId: text("stripe_account_id").notNull().default(""),
 });
 
 export type User = typeof userTable.$inferSelect;

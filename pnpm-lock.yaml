@@ -50,6 +50,9 @@ importers:
       pg:
         specifier: ^8.11.3
         version: 8.11.3
+      stripe:
+        specifier: ^14.20.0
+        version: 14.20.0
       zod:
         specifier: ^3.22.4
         version: 3.22.4
@@ -5045,6 +5048,14 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
     dev: true
+
+  /stripe@14.20.0:
+    resolution: {integrity: sha512-+3EP8GSWnKVHNATChhDzwAKk3nqSJKQOf2Q+dMGdgEk2sQXWYoA8GXY0A1TjL0m6895FVNavgvno6+0+6lC+kw==}
+    engines: {node: '>=12.*'}
+    dependencies:
+      '@types/node': 20.11.24
+      qs: 6.11.0
+    dev: false
 
   /superjson@2.2.1:
     resolution: {integrity: sha512-8iGv75BYOa0xRJHK5vRLEjE2H/i4lulTjzpUXic3Eg8akftYjkmQDa8JARQ42rlczXyFR3IeRoeFCc7RxHsYZA==}
