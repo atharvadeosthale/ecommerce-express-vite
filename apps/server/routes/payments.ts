@@ -1,21 +1,11 @@
 import { Router } from "express";
-import {
-  checkAccount,
-  createAccount,
-  updateAccount,
-} from "../functions/payments";
+import { checkAccount, createAccount } from "../functions/payments";
 import { authenticatedUser } from "../middlewares/auth";
 import { checkPaymentsReady } from "../middlewares/payments";
 
 const router = Router();
 
-router.post("/createAccount", authenticatedUser, createAccount);
-router.get(
-  "/checkAccount",
-  authenticatedUser,
-  checkPaymentsReady,
-  checkAccount
-);
-router.post("/updateAccount", authenticatedUser, updateAccount);
+router.post("/", authenticatedUser, createAccount);
+router.get("/", authenticatedUser, checkPaymentsReady, checkAccount);
 
 export default router;

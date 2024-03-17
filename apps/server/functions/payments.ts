@@ -11,6 +11,7 @@ export async function createAccount(req: Request, res: Response) {
 
   if (stripeAccountId !== "") {
     const account = await stripe.accounts.retrieve(stripeAccountId);
+
     if (!account.details_submitted) {
       const accountLink = await stripe.accountLinks.create({
         account: stripeAccountId,
@@ -18,26 +19,38 @@ export async function createAccount(req: Request, res: Response) {
         return_url: process.env.CLIENT_BASE_URL as string,
         refresh_url: process.env.CLIENT_BASE_URL as string,
       });
-
       return res.json({
         message: "Account created successfully",
-        onboardingLink: accountLink.url,
+        onboardingLink: accountLink,
       });
     }
+
+    if (process.env.ENVIRONMENT !== "development") {
+      if (!account.charges_enabled) {
+        const accountLink = await stripe.accountLinks.create({
+          account: stripeAccountId,
+          type: "account_onboarding",
+          return_url: process.env.CLIENT_BASE_URL as string,
+          refresh_url: process.env.CLIENT_BASE_URL as string,
+        });
+
+        return res.json({
+          message: "Account created successfully",
+          onboardingLink: accountLink.url,
+        });
+      }
+    }
+
     return res.status(400).json({ error: "Account already created" });
   }
 
   const account = await stripe.accounts.create({
-    type: "custom",
+    type: "standard",
     country: "IN",
     email,
     business_type: "individual",
     individual: {
       full_name_aliases: [fullName],
-    },
-    capabilities: {
-      card_payments: { requested: true },
-      transfers: { requested: true },
     },
   });
 
@@ -65,19 +78,21 @@ export async function checkAccount(req: Request, res: Response) {
   return res.json({ message: "Account ready", ready: true });
 }
 
-export async function updateAccount(req: Request, res: Response) {
-  if (!req.user) return;
+// export async function updateAccount(req: Request, res: Response) {
+//   if (!req.user) return;
 
-  const { stripeAccountId } = req.user;
+//   const { stripeAccountId } = req.user;
 
-  if (stripeAccountId === "") {
-    return res.status(400).json({ error: "Account not created" });
-  }
+//   if (stripeAccountId === "") {
+//     return res.status(400).json({ error: "Account not created" });
+//   }
 
-  const accountLink = await stripe.accountLinks.create({
-    account: stripeAccountId,
-    type: "account_update",
-  });
+//   const accountLink = await stripe.accountLinks.create({
+//     account: stripeAccountId,
+//     type: "account_update",
+//     return_url: process.env.CLIENT_BASE_URL as string,
+//     refresh_url: process.env.CLIENT_BASE_URL as string,
+//   });
 
-  return res.json({ onboardingLink: accountLink.url });
-}
+//   return res.json({ onboardingLink: accountLink.url });
+// }

@@ -19,8 +19,8 @@ app.use(express.json());
 app.use(cors());
 
 app.use("/auth", auth);
-app.use("/product", product);
-app.use("/user", user);
+app.use("/products", product);
+app.use("/users", user);
 app.use("/payments", payments);
 
 app.get("/", (req, res) => {

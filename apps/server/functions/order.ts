@@ -3,6 +3,8 @@ import { db } from "../database/db";
 import { cartTable } from "../database/schemas/cart";
 import { and, eq } from "drizzle-orm";
 import { cartItemTable } from "../database/schemas/cartItem";
+import { stripe } from "../stripe/stripe";
+import { productTable } from "../database/schemas/product";
 
 export async function checkout(req: Request, res: Response) {
   if (!req.user) return;
@@ -19,18 +21,34 @@ export async function checkout(req: Request, res: Response) {
   const cartItemResponse = await db
     .select()
     .from(cartItemTable)
+    .fullJoin(productTable, eq(cartItemTable.productId, productTable.id))
     .where(eq(cartItemTable.cartId, cartResponse[0].id));
 
   if (cartItemResponse.length === 0) {
     return res.status(404).json({ message: "No items in cart" });
   }
 
-  await db
-    .update(cartTable)
-    .set({ active: false })
-    .where(and(eq(cartTable.userId, req.user.id), eq(cartTable.active, true)));
+  // await db
+  //   .update(cartTable)
+  //   .set({ active: false })
+  //   .where(and(eq(cartTable.userId, req.user.id), eq(cartTable.active, true)));
 
   // create logic to create order
+  const checkout = await stripe.checkout.sessions.create({
+    line_items: cartItemResponse.map((item) => ({
+      price_data: {
+        currency: "INR",
+        product_data: {
+          name: item?.product?.name as string,
+        },
+        unit_amount: Number(item?.product?.price) * 100,
+      },
+      quantity: Number(item?.cart_item?.quantity),
+    })),
+  });
 
-  return res.json({ message: "Checkout successful" });
+  return res.json({
+    message: "Checkout successful",
+    checkoutUrl: checkout.url,
+  });
 }
