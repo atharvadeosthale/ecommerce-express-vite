@@ -82,16 +82,19 @@ export const deleteAddress = async (req: Request, res: Response) => {
 export const getCart = async (req: Request, res: Response) => {
   if (!req.user) return;
 
-  const cartResponse = await db
+  let cartResponse = await db
     .select()
     .from(cartTable)
     .where(and(eq(cartTable.userId, req.user.id), eq(cartTable.active, true)));
 
   if (cartResponse.length === 0) {
-    await db.insert(cartTable).values({
-      userId: req.user.id,
-      active: true,
-    });
+    cartResponse = await db
+      .insert(cartTable)
+      .values({
+        userId: req.user.id,
+        active: true,
+      })
+      .returning();
   }
 
   const cartItemsResponse = await db

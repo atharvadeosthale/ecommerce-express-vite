@@ -20,7 +20,7 @@ app.use(cors());
 
 app.use("/auth", auth);
 app.use("/products", product);
-app.use("/users", user);
+app.use("/user", user);
 app.use("/payments", payments);
 
 app.get("/", (req, res) => {
