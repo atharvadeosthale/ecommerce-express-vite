@@ -28,10 +28,23 @@ export async function checkout(req: Request, res: Response) {
     return res.status(404).json({ message: "No items in cart" });
   }
 
-  // await db
-  //   .update(cartTable)
-  //   .set({ active: false })
-  //   .where(and(eq(cartTable.userId, req.user.id), eq(cartTable.active, true)));
+  let outOfStockItems = [];
+
+  // Check if items are still available
+  for (const item of cartItemResponse) {
+    if (Number(item?.product?.stock) < Number(item?.cart_item?.quantity)) {
+      // Add out of stock item to the array
+      outOfStockItems.push(item?.product?.name);
+    }
+  }
+
+  // If there are any out of stock items, return them in the response
+  if (outOfStockItems.length > 0) {
+    return res.status(400).json({
+      message: "Some items are out of stock",
+      outOfStockItems: outOfStockItems,
+    });
+  }
 
   // create logic to create order
   const checkout = await stripe.checkout.sessions.create({
