@@ -108,3 +108,30 @@ export const updateProduct = async (req: Request, res: Response) => {
     product: updatedProduct[0],
   });
 };
+
+export const deleteProduct = async (req: Request, res: Response) => {
+  const { id }: { id?: number } = req.params;
+
+  if (!req.user || !id) return res.status(401).json({ error: "Unauthorized" });
+
+  const product = await db
+    .select()
+    .from(productTable)
+    .where(eq(productTable.id, id));
+
+  if (product.length === 0) {
+    return res.status(404).json({ error: "Product not found" });
+  }
+
+  if (product[0].creator !== req.user.id) {
+    return res
+      .status(403)
+      .json({ error: "You are not authorized to delete this product" });
+  }
+
+  await db.delete(productTable).where(eq(productTable.id, id));
+
+  return res.json({
+    message: "Product deleted successfully",
+  });
+};
